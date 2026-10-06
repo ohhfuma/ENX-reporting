@@ -1039,7 +1039,7 @@ export default function JiraProgressDashboard() {
             onClick={() => setModalEpicKey(null)}
           >
             <div
-              className="bg-white rounded-2xl shadow-xl max-w-4xl w-full max-h-[80vh] overflow-hidden flex flex-col"
+              className="bg-white rounded-2xl shadow-xl max-w-5xl w-full max-h-[80vh] overflow-hidden flex flex-col"
               onClick={(e) => e.stopPropagation()}
             >
               <div className="flex items-center justify-between p-5 border-b border-slate-200">
@@ -1057,32 +1057,40 @@ export default function JiraProgressDashboard() {
                 </button>
               </div>
               <div className="overflow-y-auto flex-1">
-                <table className="w-full text-sm">
+                <table className="w-full text-sm table-fixed">
+                  <colgroup>
+                    <col className="w-[9%]" />
+                    <col className="w-[33%]" />
+                    <col className="w-[11%]" />
+                    <col className="w-[13%]" />
+                    <col className="w-[9%]" />
+                    <col className="w-[25%]" />
+                  </colgroup>
                   <thead className="sticky top-0 bg-slate-50">
                     <tr className="text-left text-slate-500 text-xs">
-                      <th className="py-2.5 px-5">Key</th>
-                      <th className="py-2.5 px-5">Summary</th>
-                      <th className="py-2.5 px-5">Label</th>
-                      <th className="py-2.5 px-5">Status</th>
-                      <th className="py-2.5 px-5 text-right">Story Points</th>
-                      <th className="py-2.5 px-5">Assignee</th>
+                      <th className="py-2 px-3">Key</th>
+                      <th className="py-2 px-3">Summary</th>
+                      <th className="py-2 px-3">Label</th>
+                      <th className="py-2 px-3">Status</th>
+                      <th className="py-2 px-3 text-right">SP</th>
+                      <th className="py-2 px-3">Assignee</th>
                     </tr>
                   </thead>
                   <tbody>
                     {modalEpic.rows.map((row, i) => (
                       <tr key={i} className="border-t border-slate-100 hover:bg-slate-50">
-                        <td className="py-2.5 px-5 font-mono text-xs text-slate-600 whitespace-nowrap">{row.key}</td>
-                        <td className="py-2.5 px-5 text-slate-700">{row.summary}</td>
-                        <td className="py-2.5 px-5 text-slate-500 text-xs">{row.label || '—'}</td>
-                        <td className="py-2.5 px-5">
-                          <span className={`text-xs px-2 py-1 rounded-full ${statusBadgeClasses(row.status)}`}>
+                        <td className="py-2 px-3 font-mono text-xs text-slate-600 whitespace-nowrap">{row.key}</td>
+                        <td className="py-2 px-3 text-slate-700 truncate" title={row.summary}>{row.summary}</td>
+                        <td className="py-2 px-3 text-slate-500 text-xs truncate" title={row.label}>{row.label || '—'}</td>
+                        <td className="py-2 px-3">
+                          <span className={`text-xs px-2 py-0.5 rounded-full whitespace-nowrap ${statusBadgeClasses(row.status)}`}>
                             {row.status}
                           </span>
                         </td>
-                        <td className="py-2.5 px-5 text-right text-slate-600">
+                        <td className="py-2 px-3 text-right text-slate-600">
                           {row.sp === null ? <span className="text-amber-500">—</span> : row.sp}
                         </td>
-                        <td className="py-2.5 px-5 text-slate-600 text-xs whitespace-nowrap">{row.assignee || '—'}</td>
+                        <td className="py-2 px-3 text-slate-600 text-xs truncate" title={row.assignee}>{row.assignee || '—'}</td>
                       </tr>
                     ))}
                   </tbody>
