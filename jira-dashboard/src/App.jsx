@@ -38,7 +38,7 @@ const QUICK_LINKS = {
     { label: 'EE MVP Backlog', url: 'https://acupay.atlassian.net/jira/software/c/projects/EE/boards/186/backlog' }
   ],
   'EE BIP': [
-    { label: 'EE BIP Report', url: 'https://acupay.atlassian.net/issues/?filter=11334' },
+    { label: 'EE BIP Report', url: 'https://acupay.atlassian.net/issues?filter=11473' },
     { label: 'EE BIP Backlog and Dev board', url: 'https://acupay.atlassian.net/jira/software/c/projects/BIP/boards/494/backlog' }
   ]
 };
