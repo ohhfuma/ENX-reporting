@@ -22,7 +22,8 @@ const CANDIDATES = {
   parentSummary: ['parent summary', 'custom field (epic name)', 'epic name'],
   summary: ['summary', 'riepilogo'],
   label: ['labels', 'label'],
-  dueDate: ['due date', 'duedate']
+  dueDate: ['due date', 'duedate'],
+  assignee: ['assignee']
 };
 
 const STATUS_ORDER = [
@@ -162,7 +163,8 @@ const FIELD_LABELS = {
   parentSummary: 'Parent Summary (direct epic name - recommended)',
   summary: 'Summary',
   label: 'Label (optional)',
-  dueDate: 'Due Date (optional)'
+  dueDate: 'Due Date (optional)',
+  assignee: 'Assignee (optional)'
 };
 
 // ---------- Quick links dropdown bar (upload screen only) ----------
@@ -222,7 +224,7 @@ export default function JiraProgressDashboard() {
 
   const [mapping, setMapping] = useState({
     key: '', issueType: '', status: '', storyPoints: '', epicLink: '',
-    parentSummary: '', summary: '', label: '', dueDate: ''
+    parentSummary: '', summary: '', label: '', dueDate: '', assignee: ''
   });
   const [storyTypeValue, setStoryTypeValue] = useState('');
   const [epicTypeValue, setEpicTypeValue] = useState('');
@@ -383,7 +385,8 @@ export default function JiraProgressDashboard() {
           parentSummary: findHeader(uniqueHeaders, CANDIDATES.parentSummary),
           summary: findHeader(uniqueHeaders, CANDIDATES.summary),
           label: findHeader(uniqueHeaders, CANDIDATES.label),
-          dueDate: findHeader(uniqueHeaders, CANDIDATES.dueDate)
+          dueDate: findHeader(uniqueHeaders, CANDIDATES.dueDate),
+          assignee: findHeader(uniqueHeaders, CANDIDATES.assignee)
         };
 
         let epicGuess = '';
@@ -442,7 +445,7 @@ export default function JiraProgressDashboard() {
     setFileName('');
     setHeaders([]);
     setData([]);
-    setMapping({ key: '', issueType: '', status: '', storyPoints: '', epicLink: '', parentSummary: '', summary: '', label: '', dueDate: '' });
+    setMapping({ key: '', issueType: '', status: '', storyPoints: '', epicLink: '', parentSummary: '', summary: '', label: '', dueDate: '', assignee: '' });
     setStoryTypeValue('');
     setEpicTypeValue('');
     setDoneStatuses([]);
@@ -510,7 +513,8 @@ export default function JiraProgressDashboard() {
         summary: (mapping.summary ? (r[mapping.summary] || '').trim() : ''),
         label: (mapping.label ? (r[mapping.label] || '').trim() : ''),
         status,
-        sp: isNoEstimate ? null : sp
+        sp: isNoEstimate ? null : sp,
+        assignee: (mapping.assignee ? (r[mapping.assignee] || '').trim() : '')
       });
     });
 
@@ -702,7 +706,7 @@ export default function JiraProgressDashboard() {
                 <div key={fieldKey}>
                   <label className="block text-xs font-medium text-slate-600 mb-1">
                     {FIELD_LABELS[fieldKey]}
-                    {['parentSummary', 'summary', 'label', 'dueDate'].includes(fieldKey) ? '' : ' *'}
+                    {['parentSummary', 'summary', 'label', 'dueDate', 'assignee'].includes(fieldKey) ? '' : ' *'}
                   </label>
                   <select
                     value={mapping[fieldKey]}
@@ -1035,7 +1039,7 @@ export default function JiraProgressDashboard() {
             onClick={() => setModalEpicKey(null)}
           >
             <div
-              className="bg-white rounded-2xl shadow-xl max-w-3xl w-full max-h-[80vh] overflow-hidden flex flex-col"
+              className="bg-white rounded-2xl shadow-xl max-w-4xl w-full max-h-[80vh] overflow-hidden flex flex-col"
               onClick={(e) => e.stopPropagation()}
             >
               <div className="flex items-center justify-between p-5 border-b border-slate-200">
@@ -1061,6 +1065,7 @@ export default function JiraProgressDashboard() {
                       <th className="py-2.5 px-5">Label</th>
                       <th className="py-2.5 px-5">Status</th>
                       <th className="py-2.5 px-5 text-right">Story Points</th>
+                      <th className="py-2.5 px-5">Assignee</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -1077,6 +1082,7 @@ export default function JiraProgressDashboard() {
                         <td className="py-2.5 px-5 text-right text-slate-600">
                           {row.sp === null ? <span className="text-amber-500">—</span> : row.sp}
                         </td>
+                        <td className="py-2.5 px-5 text-slate-600 text-xs whitespace-nowrap">{row.assignee || '—'}</td>
                       </tr>
                     ))}
                   </tbody>
