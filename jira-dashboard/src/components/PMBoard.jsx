@@ -297,8 +297,9 @@ function NextDeadlines({ items, onChange }) {
         )}
         {items.map((it) => (
           <div key={it.id} className="flex items-center gap-2 bg-white border border-slate-200 rounded-lg px-3 py-2">
-            <input
+          <input
               type="date"
+              lang="en-GB"
               value={it.date}
               onChange={(e) => updateItem(it.id, "date", e.target.value)}
               className="text-sm text-slate-600 bg-transparent outline-none shrink-0 w-32"
@@ -317,6 +318,7 @@ function NextDeadlines({ items, onChange }) {
       <div className="flex gap-2">
         <input
           type="date"
+          lang="en-GB"
           value={draftDate}
           onChange={(e) => setDraftDate(e.target.value)}
           className="text-sm border border-slate-200 rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-emerald-400/40 bg-white shrink-0 w-36"
