@@ -1099,10 +1099,17 @@ async function exportReport() {
           ref={reportRef}
           style={{ position: "fixed", top: 0, left: "-9999px", display: "flex", flexDirection: "column", gap: "16px", padding: "16px", backgroundColor: "#ffffff" }}
         >
+          <div style={{ display: "flex", alignItems: "center", gap: "12px", width: "700px", paddingBottom: "8px", borderBottom: "2px solid #e2e8f0" }}>
+            <Logo />
+            <div>
+              <div style={{ fontWeight: "bold", fontSize: "18px", color: "#1e293b" }}>Euronext Securities, PM Board</div>
+              <div style={{ fontSize: "12px", color: "#64748b" }}>Fiscal Services — Report generated on {fmtDMY(new Date().toISOString().split("T")[0])}</div>
+            </div>
+          </div>
           {projects.map((p) => (
             <ReportCard key={p.id} project={p} />
           ))}
         </div>
-    </div>
+       </div>
   );
 }
