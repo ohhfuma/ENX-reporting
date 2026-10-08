@@ -55,6 +55,7 @@ function emptyProject() {
       usDefinition: emptyPhase(),
       developments: emptyPhase(),
       qa: emptyPhase(),
+      uat: emptyPhase(), 
       goLivePhase: { status: "To be started", notes: "" },
     },
     penTest: { enabled: false, startDate: "", status: "To be planned", notes: "" },
@@ -271,6 +272,7 @@ function progressOf(p) {
     p.phases.usDefinition.status,
     p.phases.developments.status,
     p.phases.qa.status,
+    p.phases.uat.status, 
   ];
   if (p.penTest.enabled) statuses.push(p.penTest.status);
   statuses.push(p.phases.goLivePhase.status);
@@ -284,6 +286,7 @@ function ProjectCard({ project, onEdit, onDeleteRequest, onOpenPointsChange }) {
     { key: "usDefinition", label: "US Definition", deadline: project.phases.usDefinition.deadline, status: project.phases.usDefinition.status, notes: project.phases.usDefinition.notes },
     { key: "developments", label: "Developments", deadline: project.phases.developments.deadline, status: project.phases.developments.status, notes: project.phases.developments.notes },
     { key: "qa", label: "QA", deadline: project.phases.qa.deadline, status: project.phases.qa.status, notes: project.phases.qa.notes },
+    { key: "uat", label: "UAT", deadline: project.phases.uat.deadline, status: project.phases.uat.status, notes: project.phases.uat.notes },
   ];
   if (project.penTest.enabled) {
     rows.push({
@@ -549,6 +552,12 @@ function ProjectForm({ initial, onSave, onClose }) {
             label="QA"
             data={form.phases.qa}
             onChange={(v) => updatePhase("qa", v)}
+            statusOptions={PHASE_STATUS}
+          />
+          <PhaseField
+            label="UAT"
+            data={form.phases.uat}
+            onChange={(v) => updatePhase("uat", v)}
             statusOptions={PHASE_STATUS}
           />
 
