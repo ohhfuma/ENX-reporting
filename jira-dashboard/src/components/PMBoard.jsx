@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Plus,
   Pencil,
@@ -777,7 +777,18 @@ function Sidebar({ view, setView, projects }) {
 }
 
 export default function PMBoard() {
-  const [projects, setProjects] = useState(() => []);
+  const [projects, setProjects] = useState(() => {
+    try {
+      const saved = localStorage.getItem("pmboard_projects");
+      return saved ? JSON.parse(saved) : [];
+    } catch (e) {
+      return [];
+    }
+  });
+
+  useEffect(() => {
+    localStorage.setItem("pmboard_projects", JSON.stringify(projects));
+  }, [projects]);
   const [view, setView] = useState("projects");
   const [modal, setModal] = useState(null);
   const [deletingId, setDeletingId] = useState(null);
