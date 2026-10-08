@@ -10,6 +10,7 @@ import {
   Save,
   FolderOpen,
   AlertTriangle,
+  CalendarClock,
 } from "lucide-react";
 import JiraDashboard from "./JiraDashboard";
 
@@ -60,6 +61,7 @@ function emptyProject() {
     },
     penTest: { enabled: false, startDate: "", status: "To be planned", notes: "" },
     openPoints: [],
+    nextDeadlines: [],
   };
 }
 
@@ -266,6 +268,76 @@ function OpenPoints({ points, onChange }) {
   );
 }
 
+function NextDeadlines({ items, onChange }) {
+  const [draftDate, setDraftDate] = useState("");
+  const [draftDesc, setDraftDesc] = useState("");
+
+  function add() {
+    if (!draftDate || !draftDesc.trim()) return;
+    onChange([...items, { id: uid(), date: draftDate, description: draftDesc.trim() }]);
+    setDraftDate("");
+    setDraftDesc("");
+  }
+  function remove(id) {
+    onChange(items.filter((it) => it.id !== id));
+  }
+  function updateItem(id, field, value) {
+    onChange(items.map((it) => (it.id === id ? { ...it, [field]: value } : it)));
+  }
+
+  return (
+    <div>
+      <div className="flex items-center gap-2 mb-3">
+        <CalendarClock size={16} className="text-slate-400" />
+        <h4 className="text-xs font-bold text-slate-500 uppercase tracking-wide">Next Deadlines</h4>
+      </div>
+      <div className="space-y-2 mb-3">
+        {items.length === 0 && (
+          <p className="text-xs text-slate-400 italic">No upcoming deadlines yet.</p>
+        )}
+        {items.map((it) => (
+          <div key={it.id} className="flex items-center gap-2 bg-white border border-slate-200 rounded-lg px-3 py-2">
+            <input
+              type="date"
+              value={it.date}
+              onChange={(e) => updateItem(it.id, "date", e.target.value)}
+              className="text-sm text-slate-600 bg-transparent outline-none shrink-0 w-32"
+            />
+            <input
+              value={it.description}
+              onChange={(e) => updateItem(it.id, "description", e.target.value)}
+              className="flex-1 text-sm text-slate-600 bg-transparent outline-none"
+            />
+            <button onClick={() => remove(it.id)} className="text-slate-300 hover:text-rose-500">
+              <X size={14} />
+            </button>
+          </div>
+        ))}
+      </div>
+      <div className="flex gap-2">
+        <input
+          type="date"
+          value={draftDate}
+          onChange={(e) => setDraftDate(e.target.value)}
+          className="text-sm border border-slate-200 rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-emerald-400/40 bg-white shrink-0 w-36"
+        />
+        <input
+          value={draftDesc}
+          onChange={(e) => setDraftDesc(e.target.value)}
+          onKeyDown={(e) => e.key === "Enter" && add()}
+          placeholder="Describe the upcoming deadline..."
+          className="flex-1 text-sm border border-slate-200 rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-emerald-400/40 bg-white"
+        />
+        <button
+          onClick={add}
+          className="px-3 py-2 rounded-lg bg-slate-800 hover:bg-slate-900 text-white text-sm font-medium flex items-center gap-1 shrink-0"
+        >
+          <Plus size={14} /> Add
+        </button>
+      </div>
+    </div>
+  );
+}
 function progressOf(p) {
   const statuses = [
     p.phases.hlbrs.status,
@@ -280,7 +352,7 @@ function progressOf(p) {
   return Math.round((completed / statuses.length) * 100);
 }
 
-function ProjectCard({ project, onEdit, onDeleteRequest, onOpenPointsChange }) {
+function ProjectCard({ project, onEdit, onDeleteRequest, onOpenPointsChange, onNextDeadlinesChange }) {
   const rows = [
     { key: "hlbrs", label: "HLBRs", deadline: project.phases.hlbrs.deadline, status: project.phases.hlbrs.status, notes: project.phases.hlbrs.notes },
     { key: "usDefinition", label: "US Definition", deadline: project.phases.usDefinition.deadline, status: project.phases.usDefinition.status, notes: project.phases.usDefinition.notes },
@@ -377,6 +449,12 @@ function ProjectCard({ project, onEdit, onDeleteRequest, onOpenPointsChange }) {
         <OpenPoints
           points={project.openPoints}
           onChange={(points) => onOpenPointsChange(project.id, points)}
+        />
+      </div>
+      <div className="px-5 py-4 border-t border-slate-100 bg-slate-50/50">
+        <NextDeadlines
+          items={project.nextDeadlines}
+          onChange={(items) => onNextDeadlinesChange(project.id, items)}
         />
       </div>
     </div>
@@ -723,6 +801,10 @@ export default function PMBoard() {
     setProjects((prev) => prev.map((p) => (p.id === id ? { ...p, openPoints: points } : p)));
   }
 
+  function updateNextDeadlines(id, items) {
+  setProjects((prev) => prev.map((p) => (p.id === id ? { ...p, nextDeadlines: items } : p)));
+  }
+
   function confirmDelete() {
     setProjects((prev) => prev.filter((p) => p.id !== deletingId));
     setDeletingId(null);
@@ -775,6 +857,7 @@ export default function PMBoard() {
                   onEdit={openEdit}
                   onDeleteRequest={setDeletingId}
                   onOpenPointsChange={updateOpenPoints}
+                  onNextDeadlinesChange={updateNextDeadlines}
                 />
               ))}
             </>
