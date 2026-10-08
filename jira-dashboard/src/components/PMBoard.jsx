@@ -472,6 +472,7 @@ function PhaseField({ label, data, onChange, showDate = true, dateLabel = "Deadl
         {showDate ? (
           <input
             type="date"
+            lang="en-GB"
             value={data.deadline || data.startDate || ""}
             onChange={(e) =>
               onChange({
@@ -561,6 +562,7 @@ function ProjectForm({ initial, onSave, onClose }) {
               <label className={labelClass}>Go-Live (target date)</label>
               <input
                 type="date"
+                lang="en-GB"
                 value={form.goLive}
                 onChange={(e) => setForm({ ...form, goLive: e.target.value })}
                 className={inputClass}
