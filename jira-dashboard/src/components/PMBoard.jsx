@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   Plus,
   Pencil,
@@ -13,6 +13,8 @@ import {
   CalendarClock,
 } from "lucide-react";
 import JiraDashboard from "./JiraDashboard";
+import html2canvas from "html2canvas";
+import jsPDF from "jspdf";
 
 const STAGES = ["Initiative", "Study", "Execution", "Hypercare"];
 const RAGS = ["Green", "Amber", "Red"];
@@ -38,6 +40,13 @@ function fmt(dateStr) {
     month: "short",
     year: "numeric",
   });
+}
+
+function fmtDMY(dateStr) {
+  if (!dateStr) return "—";
+  const [y, m, d] = dateStr.split("-");
+  if (!y || !m || !d) return dateStr;
+  return `${d}/${m}/${y}`;
 }
 
 function emptyPhase() {
@@ -778,7 +787,174 @@ function Sidebar({ view, setView, projects }) {
   );
 }
 
+function swapInputsForCapture(container) {
+  const inputs = container.querySelectorAll("input");
+  const replacements = [];
+  inputs.forEach((input) => {
+    const style = window.getComputedStyle(input);
+    let displayText = input.value;
+    if (input.type === "date" && input.value) {
+      const [y, m, d] = input.value.split("-");
+      displayText = `${d}/${m}/${y}`;
+    } else if (!input.value) {
+      displayText = input.placeholder || "";
+    }
+    const span = document.createElement("span");
+    span.textContent = displayText;
+    span.style.display = "inline-flex";
+    span.style.alignItems = "center";
+    span.style.width = style.width;
+    span.style.height = style.height;
+    span.style.fontSize = style.fontSize;
+    span.style.fontFamily = style.fontFamily;
+    span.style.fontWeight = style.fontWeight;
+    span.style.lineHeight = style.lineHeight;
+    span.style.color = input.value ? style.color : "#94a3b8";
+    span.style.paddingLeft = style.paddingLeft;
+    span.style.paddingRight = style.paddingRight;
+    span.style.paddingTop = style.paddingTop;
+    span.style.paddingBottom = style.paddingBottom;
+    span.style.border = style.border;
+    span.style.borderRadius = style.borderRadius;
+    span.style.backgroundColor = style.backgroundColor;
+    span.style.boxSizing = style.boxSizing;
+    span.style.verticalAlign = "middle";
+    span.style.overflow = "hidden";
+    span.style.whiteSpace = "nowrap";
+
+    input.style.display = "none";
+    input.parentNode.insertBefore(span, input);
+    replacements.push({ span, input });
+  });
+  return replacements;
+}
+
+function restoreInputs(replacements) {
+  replacements.forEach(({ span, input }) => {
+    input.style.display = "";
+    span.remove();
+  });
+}
+
+function ReportCard({ project }) {
+  const rows = [
+    { label: "HLBRs", deadline: project.phases.hlbrs.deadline, status: project.phases.hlbrs.status, notes: project.phases.hlbrs.notes },
+    { label: "US Definition", deadline: project.phases.usDefinition.deadline, status: project.phases.usDefinition.status, notes: project.phases.usDefinition.notes },
+    { label: "Developments", deadline: project.phases.developments.deadline, status: project.phases.developments.status, notes: project.phases.developments.notes },
+    { label: "QA", deadline: project.phases.qa.deadline, status: project.phases.qa.status, notes: project.phases.qa.notes },
+    { label: "UAT", deadline: project.phases.uat.deadline, status: project.phases.uat.status, notes: project.phases.uat.notes },
+  ];
+  if (project.penTest.enabled) {
+    rows.push({ label: "Penetration Tests", deadline: project.penTest.startDate, status: project.penTest.status, notes: project.penTest.notes });
+  }
+  rows.push({ label: "Go-Live", deadline: project.goLive, status: project.phases.goLivePhase.status, notes: project.phases.goLivePhase.notes });
+
+  const ragDot =
+    project.rag === "Green" ? "bg-emerald-500" : project.rag === "Amber" ? "bg-amber-400" : "bg-rose-500";
+
+  return (
+    <div className="bg-white border border-slate-200 rounded-xl p-5" style={{ width: "700px" }}>
+      <div className="flex items-center gap-2 mb-3">
+        <span className={`w-3 h-3 rounded-full ${ragDot} inline-block`} />
+        <span className="font-bold text-slate-800 text-base">{project.name || "—"}</span>
+        <span className="text-xs text-slate-500 ml-2">Go-Live: {fmtDMY(project.goLive)}</span>
+        <span className="text-xs bg-indigo-50 text-indigo-700 px-2 py-0.5 rounded-full ml-2">{project.stage}</span>
+      </div>
+      <table className="w-full text-sm" style={{ borderCollapse: "collapse" }}>
+        <thead>
+          <tr className="text-left text-xs text-slate-400">
+            <th className="py-1" style={{ textTransform: "uppercase" }}>Phase</th>
+            <th className="py-1" style={{ textTransform: "uppercase" }}>Deadline</th>
+            <th className="py-1" style={{ textTransform: "uppercase" }}>Status</th>
+            <th className="py-1" style={{ textTransform: "uppercase" }}>Notes</th>
+          </tr>
+        </thead>
+        <tbody>
+          {rows.map((r) => (
+            <tr key={r.label} style={{ borderTop: "1px solid #f1f5f9" }}>
+              <td className="py-2 font-semibold text-slate-700">{r.label}</td>
+              <td className="py-2 text-slate-500">{fmtDMY(r.deadline)}</td>
+              <td className="py-2 text-slate-600">{r.status}</td>
+              <td className="py-2 text-slate-500" style={{ whiteSpace: "normal", wordBreak: "break-word", maxWidth: "150px" }}>{r.notes || "—"}</td>
+            </tr>
+          ))}
+      </tbody>
+      </table>
+      <div className="mt-3">
+        <div className="text-xs font-bold text-slate-500 mb-1" style={{ textTransform: "uppercase" }}>Open Points</div>
+        {project.openPoints.length === 0 ? (
+          <div className="text-xs text-slate-400 italic">No open points.</div>
+        ) : (
+          project.openPoints.map((pt) => (
+            <div key={pt.id} className="text-sm text-slate-600">• {pt.text}</div>
+          ))
+        )}
+      </div>
+      <div className="mt-3">
+        <div className="text-xs font-bold text-slate-500 mb-1" style={{ textTransform: "uppercase" }}>Next Deadlines</div>
+        {project.nextDeadlines.length === 0 ? (
+          <div className="text-xs text-slate-400 italic">No upcoming deadlines.</div>
+        ) : (
+          project.nextDeadlines.map((it) => (
+            <div key={it.id} className="text-sm text-slate-600">{fmtDMY(it.date)} — {it.description}</div>
+          ))
+        )}
+      </div>
+    </div>
+  );
+}
 export default function PMBoard() {
+  const reportRef = useRef(null);
+
+async function exportReport() {
+    if (!reportRef.current) return;
+    const cards = reportRef.current.children;
+    if (cards.length === 0) return;
+
+    const pdf = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
+    const margin = 10;
+    const pageWidth = pdf.internal.pageSize.getWidth();
+    const pageHeight = pdf.internal.pageSize.getHeight();
+    const usableWidth = pageWidth - margin * 2;
+
+    let cursorY = margin;
+    let firstCardOnPage = true;
+
+    for (const card of cards) {
+      const canvas = await html2canvas(card, {
+        scale: 2,
+        backgroundColor: "#ffffff",
+        onclone: (clonedDoc) => {
+          clonedDoc.querySelectorAll("input").forEach((inp) => {
+            if (inp.type === "date" && inp.value) {
+              const [y, m, d] = inp.value.split("-");
+              inp.setAttribute("value", `${d}/${m}/${y}`);
+              inp.type = "text";
+            } else {
+              inp.setAttribute("value", inp.value);
+            }
+          });
+        },
+      });
+      const imgData = canvas.toDataURL("image/png");
+      const imgWidth = usableWidth;
+      const imgHeight = (canvas.height * imgWidth) / canvas.width;
+
+      if (!firstCardOnPage && cursorY + imgHeight > pageHeight - margin) {
+        pdf.addPage();
+        cursorY = margin;
+        firstCardOnPage = true;
+      }
+
+      pdf.addImage(imgData, "PNG", margin, cursorY, imgWidth, imgHeight);
+      cursorY += imgHeight + 6;
+      firstCardOnPage = false;
+    }
+
+    const today = new Date().toISOString().split("T")[0];
+    pdf.save(`PM-Board-Report-${today}.pdf`);
+  }
+
   const [projects, setProjects] = useState(() => {
     try {
       const saved = localStorage.getItem("pmboard_projects");
@@ -845,6 +1021,12 @@ export default function PMBoard() {
           >
             <Plus size={16} /> New Project
           </button>
+          <button
+  onClick={exportReport}
+  className="inline-flex items-center gap-2 bg-slate-700 hover:bg-slate-800 text-white text-sm font-semibold px-4 py-2.5 rounded-lg ml-2"
+>
+  <Save size={16} /> Export Report
+</button>
         </div>
         <div className="h-1.5 w-full bg-gradient-to-r from-sky-300 via-teal-500 to-emerald-500" />
       </div>
@@ -865,16 +1047,17 @@ export default function PMBoard() {
                   </button>
                 </div>
               )}
-              {projects.map((p) => (
+            {projects.map((p) => (
+              <div key={p.id} className="pdf-card">
                 <ProjectCard
-                  key={p.id}
                   project={p}
                   onEdit={openEdit}
                   onDeleteRequest={setDeletingId}
                   onOpenPointsChange={updateOpenPoints}
                   onNextDeadlinesChange={updateNextDeadlines}
                 />
-              ))}
+              </div>
+            ))}
             </>
           ) : (
             <DashboardView />
@@ -912,6 +1095,14 @@ export default function PMBoard() {
       {deletingId && (
         <DeleteConfirm onCancel={() => setDeletingId(null)} onConfirm={confirmDelete} />
       )}
+      <div
+          ref={reportRef}
+          style={{ position: "fixed", top: 0, left: "-9999px", display: "flex", flexDirection: "column", gap: "16px", padding: "16px", backgroundColor: "#ffffff" }}
+        >
+          {projects.map((p) => (
+            <ReportCard key={p.id} project={p} />
+          ))}
+        </div>
     </div>
   );
 }
